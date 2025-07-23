@@ -24,8 +24,17 @@ class RolesTableSeeder extends Seeder
         // DB::table('model_has_roles')->truncate();
         // DB::table('model_has_permissions')->truncate();
 
-        // Role::create(['name' => 'superadmin']);
-        // Role::create(['name' => 'admin']);
+        Role::create(['name' => 'superadmin']);
+        Role::create(['name' => 'admin']);
+        Role::create(['name' => 'editor']);
+
+        $roleSuperAdmin = Role::findByName('superadmin');
+        $roleSuperAdmin->givePermissionTo('users.userIndex');
+        $roleSuperAdmin->givePermissionTo('users.create');
+        $roleSuperAdmin->givePermissionTo('users.edit');
+        $roleSuperAdmin->givePermissionTo('users.delete');
+
+
 
         //php artisan migrate --seed
     }

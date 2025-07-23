@@ -31,6 +31,7 @@
             </div>
             @include('layouts.footer')
         </div>
+
         <!-- ============================================================== -->
         <!-- End Right content here -->
         <!-- ============================================================== -->
@@ -42,6 +43,8 @@
     <!-- END Right Sidebar -->
 
     @include('layouts.vendor-scripts')
+
+    
 </body>
 
 </html>

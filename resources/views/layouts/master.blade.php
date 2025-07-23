@@ -8,8 +8,10 @@
     <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
     <meta content="Themesbrand" name="author" />
     <!-- App favicon -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <link rel="shortcut icon" href="{{ URL::asset('build/images/favicon.ico') }}">
     @include('layouts.head-css')
+
 </head>
 
 @section('body')

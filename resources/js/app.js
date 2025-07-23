@@ -335,6 +335,7 @@ File: Main Js File
         initLanguage();
         initPreloader();
         Waves.init();
+        Waves.attach('.btn', ['waves-button', 'waves-light']);
         initCheckAll();
     }
 

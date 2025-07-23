@@ -192,6 +192,7 @@ return [
   "backend" => "Backend",
   "yajra-datatable" => "Yajra Datatable",
   // Menu
+  "userIndex" => "Users",
   "seller" => "Seller",
   "seller_req" => "Request Seller",
   "seller_list" => "Daftar Seller",
