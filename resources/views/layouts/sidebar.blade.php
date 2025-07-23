@@ -29,8 +29,15 @@
 
                 <li>
                      <a href="{{ route('users.index') }}" class="waves-effect">
-                        <i class='bx  bx-user-circle'  ></i>
+                        <i class='bx bx-user-circle'  ></i>
                         <span >@lang('translation.userIndex')</span>
+                    </a>
+                </li>
+
+                <li>
+                     <a href="{{ url('/permission') }}" class="waves-effect">
+                        <i class='bx bx-user-circle'  ></i>
+                        <span >@lang('translation.Permission')</span>
                     </a>
                 </li>
 
