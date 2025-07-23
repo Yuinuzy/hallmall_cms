@@ -42,12 +42,12 @@
                                 <input type="email" class="form-control" name="email" placeholder="Masukan Email">
                             </div>
                         </div>
-                        <div class="row mb-4">
+                        {{-- <div class="row mb-4">
                             <label for="password" class="col-sm-3 col-form-label">Password</label>
                             <div class="col-sm-9">
                                 <input type="password" class="form-control" name="password" placeholder="Masukan Password">
                             </div>
-                        </div>
+                        </div> --}}
 
                         {{-- Dropdown Role --}}
                         <div class="row mb-4">

@@ -33,14 +33,14 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email'    => 'required|email|unique:users',
-            'password' => 'required|min:6',
+            // 'password' => 'required|min:6',
             'role' => 'required|exists:roles,name',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email'    => $request->email,
-            'password' => bcrypt($request->password),
+            'password' => bcrypt('password'),
         ]);
 
         $user->assignRole($request->role);
@@ -102,7 +102,7 @@ class UserController extends Controller
         $request->validate([
             'name' => 'required',
             'email' => "required|email|unique:cms_users,email,$id",
-            'password' => 'nullable|min:6',
+            // 'password' => 'nullable|min:6',
             'role' => 'required|exists:roles,name',
         ]);
 

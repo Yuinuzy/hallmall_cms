@@ -26,25 +26,35 @@ class RoleController extends Controller
             ->addIndexColumn()
             ->make(true);
     }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|unique:roles,name',
+        ]);
+
+        Role::create(['name' => $request->name]);
+
+        return response()->json(['message' => 'Role berhasil ditambahkan.']);
+    }
     // Menampilkan form edit role (optional)
     public function edit($id)
     {
         $role = Role::findOrFail($id);
-        $roles = Role::all(); // Untuk dropdown jika perlu
-
-        return view('admin.role.edit', compact('role', 'roles'));
+        return response()->json($role);
     }
 
     // Mengupdate role user
-    public function updateUserRole(Request $request, $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
-            'role' => 'required|exists:roles,name',
+            'name' => 'required|unique:roles,name,' . $id,
         ]);
 
-        $user = CMSUser::findOrFail($id);
-        $user->syncRoles([$request->role]);
+        $role = Role::findOrFail($id);
+        $role->name = $request->name;
+        $role->save();
 
-        return response()->json(['message' => 'Role berhasil diperbarui']);
+        return response()->json(['message' => 'Role berhasil diupdate']);
     }
 }

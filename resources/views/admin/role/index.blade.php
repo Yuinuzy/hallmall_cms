@@ -31,6 +31,40 @@
             <div class="card">
                 <div class="card-body">
 
+                    <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal"
+                        data-bs-target="#exampleModal">
+                        <i class="fa fa-plus me-1"></i>
+                        Tambah Role
+                    </button>
+
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Tambah Role</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="formTambahRole">
+                                        @csrf
+                                        <div class="mb-3">
+                                            <label for="role_name" class="form-label">Nama Role</label>
+                                            <input type="text" class="form-control" id="role_name" name="name"
+                                                placeholder="Contoh: admin">
+                                            <div class="invalid-feedback" id="error-role-name"></div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    <button type="submit" form="formTambahRole" class="btn btn-primary">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <table id="dataTable" class="table table-bordered dt-responsive  nowrap w-100">
                         <thead>
                             <tr>
@@ -41,29 +75,41 @@
                             </tr>
                         </thead>
                     </table>
+
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                        aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Ubah Nama Role</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form id="formRole">
+                                        @csrf
+                                        <input type="hidden" id="role_id" name="id">
+                                        <div class="mb-3">
+                                            <label for="role_name" class="form-label">Nama Role</label>
+                                            <input type="text" class="form-control" id="role_name" name="name"
+                                                placeholder="Contoh: admin">
+                                            <div class="invalid-feedback" id="error-role-name"></div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    <button type="submit" form="formRole" class="btn btn-primary"
+                                        id="btnSimpan">Simpan</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div> <!-- end col -->
     </div> <!-- end row -->
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    ...
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary">Save changes</button>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 
@@ -137,9 +183,43 @@
 
             $("#dataTable").on("click", ".btn-edit", function() {
                 const id = $(this).data("id");
-                console.log(id); // Debug
-                window.location.href = `{{ url('/role/${id}/edit') }}`;
-            })
+
+                $.get(`/role/${id}/edit`, function(role) {
+                    $('#role_id').val(role.id);
+                    $('#role_name').val(role.name);
+                    $('#exampleModal .modal-title').text('Edit Role');
+                    $('#exampleModal').modal('show');
+
+                    // Ubah form ID untuk edit
+                    $('#formTambahRole').attr('id', 'formEditRole');
+                    $('#formEditRole').off('submit').on('submit', function(e) {
+                        e.preventDefault();
+                        const formData = $(this).serialize();
+
+                        $.ajax({
+                            url: `/role/${id}/update`,
+                            method: 'PUT',
+                            data: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
+                                    'content')
+                            },
+                            success: function() {
+                                $('#exampleModal').modal('hide');
+                                $('#dataTable').DataTable().ajax.reload();
+                                $('#formEditRole')[0].reset();
+                            },
+                            error: function(xhr) {
+                                const errors = xhr.responseJSON.errors;
+                                if (errors?.name) {
+                                    $('#role_name').addClass('is-invalid');
+                                    $('#error-role-name').text(errors.name[0]);
+                                }
+                            }
+                        });
+                    });
+                });
+            });
 
             $("#dataTable").on("click", ".btn-delete", function() {
                 const id = $(this).data("id");
@@ -161,6 +241,30 @@
                             'Terjadi kesalahan'));
                     }
                 });
+            });
+        });
+
+        $('#formTambahRole').on('submit', function(e) {
+            e.preventDefault();
+
+            const formData = $(this).serialize();
+
+            $.ajax({
+                type: "POST",
+                url: "{{ route('role.store') }}",
+                data: formData,
+                success: function(res) {
+                    $('#exampleModal').modal('hide');
+                    $('#dataTable').DataTable().ajax.reload();
+                    $('#formTambahRole')[0].reset();
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON.errors;
+                    if (errors?.name) {
+                        $('#role_name').addClass('is-invalid');
+                        $('#error-role-name').text(errors.name[0]);
+                    }
+                }
             });
         });
     </script>

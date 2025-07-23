@@ -29,9 +29,10 @@
 
     Route::prefix('role')->group(function () {
         Route::get('/', [RoleController::class, 'index'])->name('role.index');
+        Route::post('/role/store', [RoleController::class, 'store'])->name('role.store');
         Route::get('/json', [RoleController::class, 'json']);
         Route::get('/{id}/edit', [RoleController::class, 'edit'])->name('role.edit');
-        Route::put('/{id}/update', [RoleController::class, 'updateRole'])->name('role.update');
+        Route::put('/{id}/update', [RoleController::class, 'update'])->name('role.update');
     });
 
     Route::get('/admin/dashboard', function () {
