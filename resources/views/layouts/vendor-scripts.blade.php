@@ -49,4 +49,30 @@
 <!-- App js -->
 <script src="{{ URL::asset('build/js/app.js')}}"></script>
 
+<script src="{{ URL::asset('build/libs/sweetalert2/sweetalert2.min.js') }}"></script>
+<script src="{{ URL::asset('build/js/pages/sweet-alerts.init.js') }}"></script>
+
+<script src="{{ URL::asset('build/js/app.js')}}"></script>
+
+<script type="text/javascript">
+
+    $(document).ready(function() {
+        $.ajaxSetup({
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            }
+        });
+    })
+
+    function showAlert(message, icon, title) {
+        return Swal.fire({
+            title: title,
+            text: message,
+            icon: icon,
+            confirmButtonText: 'OK'
+        });
+    }
+
+</script>
+
 @yield('script-bottom')

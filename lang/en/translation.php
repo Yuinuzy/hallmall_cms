@@ -193,6 +193,7 @@ return [
   "yajra-datatable" => "Yajra Datatable",
   // Menu
   "userIndex" => "Users",
+  "Permission" => "Permission",
   "seller" => "Seller",
   "seller_req" => "Request Seller",
   "seller_list" => "Daftar Seller",
