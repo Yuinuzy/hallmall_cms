@@ -34,6 +34,7 @@ Route::prefix('users')->group(function () {
         Route::get('/json', [RoleController::class, 'json']);
         Route::get('/{id}/edit', [RoleController::class, 'edit'])->name('role.edit');
         Route::put('/{id}/update', [RoleController::class, 'update'])->name('role.update');
+        Route::delete('/{id}/delete', [RoleController::class, 'destroy'])->name('role.destroy');
     });
 
 Route::get('/admin/dashboard', function () {

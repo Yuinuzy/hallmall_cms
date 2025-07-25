@@ -73,7 +73,8 @@
                                 <div class="col-sm-9">
                                     <div>
                                         <a href="{{ route('users.index') }}" class="btn btn-danger">Kembali</a>
-                                        <button type="submit" class="btn btn-primary w-md">Submit</button>
+                                        <button type="submit" class="btn btn-success ms-2">
+                                            <i class="fa fa-save me-1"></i>Simpan</button>
                                     </div>
                                 </div>
                             </div>
@@ -92,9 +93,10 @@
     @section('script')
         <script type="text/javascript">
             $(document).ready(function() {
+                const path = window.location.pathname;
+                const id = path.split("/")[2];
 
-                const path = window.location.pathname
-                const id = path.split("/")[2]
+                // Ambil data user
                 $.ajax({
                     url: `{{ url('/users/${id}/get_data') }}`,
                     method: "GET",
@@ -102,53 +104,73 @@
                         if (response.status === true) {
                             $("#name").val(response.data.name);
                             $("#email").val(response.data.email);
-                            $("#password").val(response.data.password);
                             $("#role").val(response.data.role);
                         } else {
-                            window.location.href = "{{ url('/users') }}";
+                            window.location.href = "{{ route('users.index') }}";
                         }
                     },
                     error: function(error) {
-                        console.log(error);
-                        alert("Gagal mengambil data.");
+                        console.error(error);
+                        showAlert("Gagal mengambil data.", "error", "Error");
                     }
                 });
-                $('#editForm').on('submit', function(e) {
-                    e.preventDefault(); // Hindari reload form
 
-                    $.ajaxSetup({
-                        headers: {
-                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                        }
-                    });
+                // Submit form edit
+                $("#editForm").submit(function(e) {
+                    e.preventDefault();
 
-                    let formSerialized = $(this).serialize()+'&_method=PUT';
+                    $("#editForm .is-invalid").removeClass('is-invalid');
+                    $("#editForm .invalid-feedback").remove();
+
+                    let submitButton = $("#editForm button[type='submit']");
+                    submitButton.prop("disabled", true).html(
+                        `<i class="fa fa-spinner fa-spin"></i> Menyimpan...`);
+
+                    let formSerialized = $(this).serialize() + '&_method=PUT';
 
                     $.ajax({
-                        url: `{{ url('/users/${id}') }}`, // Pastikan route ini sesuai
+                        url: `{{ url('/users/${id}') }}`,
                         method: "POST",
                         data: formSerialized,
+                        success: function(res) {
+                            submitButton.prop("disabled", false).html(
+                                `<i class="fa fa-save"></i> Simpan`);
 
-                        // role: $('#horizontal-role-select').val() // jika pakai r
-                        success: function(response) {
-                            alert('User berhasil diperbarui!');
-                            $('#editForm')[0].reset(); // Kosongkan form
-                            window.location.href = "{{ route('users.index') }}"; // Kembali ke index
-                        },
-                        error: function(xhr) {
-                            if (xhr.status === 422) {
-                                let errors = xhr.responseJSON.errors;
-                                let msg = '';
-                                for (let key in errors) {
-                                    msg += errors[key][0] + '\n';
-                                }
-                                alert(msg); // Tampilkan validasi
+                            if (res.status === true) {
+                                showAlert(res.message || "User berhasil diperbarui!", "success",
+                                    "Berhasil").then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = "{{ route('users.index') }}";
+                                    }
+                                });
                             } else {
-                                alert('Terjadi kesalahan saat menambahkan user.');
+                                showAlert(res.message || "Gagal memperbarui user", "error",
+                                "Gagal");
+                            }
+                        },
+                        error: function(error) {
+                            submitButton.prop("disabled", false).html(
+                                `<i class="fa fa-save"></i> Simpan`);
+
+                            if (error.status === 422) {
+                                let errors = error.responseJSON.errors;
+
+                                $.each(errors, function(key, value) {
+                                    let input = $(`[name="${key}"]`);
+                                    input.addClass('is-invalid');
+
+                                    input.next('.invalid-feedback').remove();
+
+                                    input.after(
+                                        `<span class="invalid-feedback d-block">${value[0]}</span>`
+                                        );
+                                });
+                            } else {
+                                showAlert(error.responseText || error.statusText, "error", "Gagal");
                             }
                         }
                     });
                 });
-            })
+            });
         </script>
     @endsection

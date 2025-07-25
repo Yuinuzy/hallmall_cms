@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use App\Helpers\ResponseHelper;
 use Spatie\Permission\Models\Role;
 use Yajra\DataTables\DataTables;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 
 class UserController extends Controller
@@ -30,25 +30,45 @@ class UserController extends Controller
     // Simpan user baru
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required',
-            'email'    => 'required|email|unique:users',
-            // 'password' => 'required|min:6',
-            'role' => 'required|exists:roles,name',
-        ]);
+        try {
+            $rules = [
+                'name' => 'required|min:3',
+                'email' => 'required|email|unique:users',
+                'role' => 'required|exists:roles,name',
+            ];
 
-        $user = User::create([
-            'name' => $request->name,
-            'email'    => $request->email,
-            'password' => bcrypt('password'),
-        ]);
+            $messages = [
+                'name.required' => 'Nama wajib diisi.',
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'email.unique' => 'Email sudah digunakan.',
+                'role.required' => 'Role wajib dipilih.',
+                'role.exists' => 'Role tidak valid.'
+            ];
 
-        $user->assignRole($request->role);
+            $validator = Validator::make($request->all(), $rules, $messages);
 
-        if ($request->ajax()) {
-            return response()->json(['message' => 'User berhasil ditambahkan', 'data' => $user]);
+            if ($validator->fails()) {
+                return ResponseHelper::validationErrorResponse($validator);
+            }
+
+            DB::beginTransaction();
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => bcrypt('password'), // default password
+            ]);
+
+            $user->assignRole($request->role);
+
+            DB::commit();
+
+            return ResponseHelper::successResponse('User berhasil ditambahkan', 201, $user);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::errorResponse($e, 500);
         }
-        return redirect()->route('users.index')->with('success', 'User berhasil ditambahkan.');
     }
 
 
@@ -99,46 +119,66 @@ class UserController extends Controller
     // Update data user
     public function update(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required',
-            'email' => "required|email|unique:cms_users,email,$id",
-            // 'password' => 'nullable|min:6',
-            'role' => 'required|exists:roles,name',
-        ]);
+        try {
+            $rules = [
+                'name' => 'required',
+                'email' => "required|email|unique:users,email,$id",
+                'role' => 'required|exists:roles,name',
+            ];
 
-        $user = User::findOrFail($id);
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-        ];
+            $messages = [
+                'name.required' => 'Nama wajib diisi.',
+                'email.required' => 'Email wajib diisi.',
+                'email.email' => 'Format email tidak valid.',
+                'email.unique' => 'Email sudah digunakan.',
+                'role.required' => 'Role wajib dipilih.',
+                'role.exists' => 'Role tidak valid.',
+            ];
 
-        if ($request->filled('password')) {
-            $updateData['password'] = bcrypt($request->password);
+            $validator = Validator::make($request->all(), $rules, $messages);
+
+            if ($validator->fails()) {
+                return ResponseHelper::validationErrorResponse($validator);
+            }
+
+            DB::beginTransaction();
+
+            $user = User::findOrFail($id);
+
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+            ]);
+
+            $user->syncRoles([$request->role]);
+
+            DB::commit();
+
+            return ResponseHelper::successResponse('User berhasil diperbarui', 200, $user);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::errorResponse($e, 500);
         }
-        $user->update($updateData);
-
-        $user->syncRoles([$request->role]);
-
-        if ($request->ajax()) {
-            return response()->json(['message' => 'User berhasil diperbarui', 'data' => $user]);
-        }
-
-        return redirect()->route('users.index')->with('success', 'User berhasil diperbarui.');
     }
+
 
     // Hapus user
-    public function destroy(Request $request, $id)
+    public function destroy($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
+        try {
+            DB::beginTransaction();
 
-        if ($request->ajax()) {
-            return response()->json(['message' => 'User berhasil dihapus']);
+            $user = User::findOrFail($id);
+            $user->delete();
+
+            DB::commit();
+
+            return ResponseHelper::successResponse('User berhasil dihapus', 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return ResponseHelper::errorResponse($e, 500);
         }
-
-        return redirect()->route('users.index')->with('success', 'User berhasil dihapus.');
     }
-
     public function json(Request $request)
     {
         try {

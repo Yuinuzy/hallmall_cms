@@ -32,12 +32,12 @@
                 <div class="card-body">
 
                     <button type="button" class="btn btn-primary mb-2" data-bs-toggle="modal"
-                        data-bs-target="#exampleModal">
+                        data-bs-target="#modalTambah">
                         <i class="fa fa-plus me-1"></i>
                         Tambah Role
                     </button>
 
-                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="exampleModalLabel"
                         aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -50,16 +50,18 @@
                                     <form id="formTambahRole">
                                         @csrf
                                         <div class="mb-3">
-                                            <label for="role_name" class="form-label">Nama Role</label>
-                                            <input type="text" class="form-control" id="role_name" name="name"
+                                            <label for="role_name_tambah" class="form-label">Nama Role</label>
+                                            <input type="text" class="form-control" id="role_name_tambah" name="name"
                                                 placeholder="Contoh: admin">
                                             <div class="invalid-feedback" id="error-role-name"></div>
                                         </div>
                                     </form>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" form="formTambahRole" class="btn btn-primary">Simpan</button>
+                                    <button type="reset" class="btn btn-danger" data-bs-dismiss="modal"><i
+                                            class="fa fa-times me-1"></i>Tutup</button>
+                                    <button type="submit" form="formTambahRole" class="btn btn-success"><i
+                                            class="fa fa-save me-1"></i>Simpan</button>
                                 </div>
                             </div>
                         </div>
@@ -76,8 +78,8 @@
                         </thead>
                     </table>
 
-                    <!-- Modal -->
-                    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    <!-- Modal Edit -->
+                    <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="exampleModalLabel"
                         aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -87,21 +89,22 @@
                                         aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form id="formRole">
+                                    <form id="formEditRole">
                                         @csrf
                                         <input type="hidden" id="role_id" name="id">
                                         <div class="mb-3">
-                                            <label for="role_name" class="form-label">Nama Role</label>
-                                            <input type="text" class="form-control" id="role_name" name="name"
+                                            <label for="role_name_edit" class="form-label">Nama Role</label>
+                                            <input type="text" class="form-control" id="role_name_edit" name="name"
                                                 placeholder="Contoh: admin">
                                             <div class="invalid-feedback" id="error-role-name"></div>
                                         </div>
                                     </form>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                                    <button type="submit" form="formRole" class="btn btn-primary"
-                                        id="btnSimpan">Simpan</button>
+                                    <button type="reset" class="btn btn-danger" data-bs-dismiss="modal"><i
+                                            class="fa fa-times me-1"></i>Tutup</button>
+                                    <button type="submit" form="formEditRole" class="btn btn-success" id="btnSimpan"> <i
+                                            class="fa fa-save me-1"></i>Simpan</button>
                                 </div>
                             </div>
                         </div>
@@ -142,10 +145,15 @@
                     url: "{{ url('/role/json') }}",
                     type: "GET",
                     dataSrc: function(json) {
-                        console.log("DATA DARI SERVER (console.log):", json
-                            .data); // :white_check_mark: tampilkan data di console
-                        return json.data; // tetap kembalikan data untuk DataTables
+                        console.log(json);
+
+                        return json.data;
                     },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX ERROR:", error);
+                        console.warn("STATUS:", status);
+                        console.log("XHR OBJECT:", xhr);
+                    }
                 },
                 columns: [{
                         data: 'DT_RowIndex',
@@ -169,13 +177,13 @@
                         className: 'text-center',
                         render: function(data) {
                             return `
-                <button class="btn btn-sm btn-warning btn-edit" data-id="${data}">
-                    <i class="fa fa-edit"></i> Edit
-                </button>
-                <button class="btn btn-sm btn-danger btn-delete" data-id="${data}">
-                    <i class="fa fa-trash"></i> Hapus
-                </button>
-            `;
+                            <button class="btn btn-sm btn-warning btn-edit" data-id="${data}">
+                                <i class="fa fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-delete" data-id="${data}">
+                                <i class="fa fa-trash"></i> Hapus
+                            </button>
+                            `;
                         }
                     }
                 ]
@@ -186,66 +194,121 @@
 
                 $.get(`/role/${id}/edit`, function(role) {
                     $('#role_id').val(role.id);
-                    $('#role_name').val(role.name);
-                    $('#exampleModal .modal-title').text('Edit Role');
-                    $('#exampleModal').modal('show');
+                    $('#role_name_edit').val(role.name);
+                    $('#modalEdit .modal-title').text('Edit Role');
+                    $('#modalEdit').modal('show');
 
-                    // Ubah form ID untuk edit
-                    $('#formTambahRole').attr('id', 'formEditRole');
                     $('#formEditRole').off('submit').on('submit', function(e) {
                         e.preventDefault();
-                        const formData = $(this).serialize();
+
+                        let form = $(this);
+                        let formData = form.serialize() + '&_method=PUT';
+
+                        let submitButton = $('#btnSimpan');
+                        submitButton.prop("disabled", true).html(
+                            `<i class="fa fa-spinner fa-spin"></i> Menyimpan...`);
 
                         $.ajax({
                             url: `/role/${id}/update`,
-                            method: 'PUT',
+                            method: "POST",
                             data: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr(
-                                    'content')
+                            success: function(res) {
+                                submitButton.prop("disabled", false).html(
+                                    `<i class="fa fa-save"></i> Simpan`);
+
+                                if (res.status === true) {
+                                    showAlert(res.message, "success",
+                                        "Berhasil").then((result) => {
+                                        if (result.isConfirmed) {
+                                            $("#formEditRole")[0]
+                                                .reset();
+                                            $("#formEditRole .is-invalid")
+                                                .removeClass(
+                                                    'is-invalid');
+                                            $("#formEditRole .invalid-feedback")
+                                                .remove();
+                                            $("#modalEdit").modal(
+                                                "hide");
+                                            $("#dataTable").DataTable()
+                                                .ajax.reload(null,
+                                                    false);
+                                        }
+                                    });
+                                } else {
+                                    showAlert(res.message, "error", "Gagal");
+                                }
                             },
-                            success: function() {
-                                $('#exampleModal').modal('hide');
-                                $('#dataTable').DataTable().ajax.reload();
-                                $('#formEditRole')[0].reset();
-                            },
-                            error: function(xhr) {
-                                const errors = xhr.responseJSON.errors;
-                                if (errors?.name) {
-                                    $('#role_name').addClass('is-invalid');
-                                    $('#error-role-name').text(errors.name[0]);
+                            error: function(error) {
+                                submitButton.prop("disabled", false).html(
+                                    `<i class="fa fa-save"></i> Simpan`);
+                                if (error.status === 422) {
+                                    let errors = error.responseJSON.errors;
+
+                                    $.each(errors, function(key, value) {
+                                        let input = $(
+                                            `#formEditRole [name="${key}"]`
+                                        );
+                                        input.addClass('is-invalid');
+                                        input.next('.invalid-feedback')
+                                            .remove();
+                                        input.after(
+                                            `<span class="invalid-feedback d-block">${value[0]}</span>`
+                                        );
+                                    });
+                                } else {
+                                    showAlert(error.responseText || error
+                                        .statusText, "error", "Gagal");
                                 }
                             }
                         });
                     });
                 });
+
             });
 
             $("#dataTable").on("click", ".btn-delete", function() {
-                const id = $(this).data("id");
-                const confirmed = confirm("Yakin ingin menghapus user ini?");
-                if (!confirmed) return;
+                const id = $(this).data("id")
 
-                $.ajax({
-                    url: `/users/${id}/delete`,
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        alert("User berhasil dihapus!");
-                        $('#dataTable').DataTable().ajax.reload(); // refresh tabel
-                    },
-                    error: function(xhr) {
-                        alert("Gagal menghapus user: " + (xhr.responseJSON?.message ||
-                            'Terjadi kesalahan'));
+                Swal.fire({
+                    title: "Apakah Ingin Menghapus Data Ini?",
+                    text: "Klik Ya Untuk Menghapus Data",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Ya, Hapus Data",
+                    cancelButtonText: "Kembali",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('/role/${id}/delete') }}`,
+                            method: "DELETE",
+                            success: function(res) {
+                                if (res.status === true) {
+                                    showAlert(res.message, "success", "Berhasil")
+                                    table.ajax.reload()
+                                } else {
+                                    showAlert(res, "error", "Gagal")
+                                }
+                            },
+                            error: function(err) {
+                                console.error(err)
+                                showAlert(err, "error", "Gagal")
+                            }
+                        })
                     }
                 });
-            });
+            })
         });
 
         $('#formTambahRole').on('submit', function(e) {
             e.preventDefault();
+
+            $("#formTambahRole .is-invalid").removeClass('is-invalid');
+            $("#formTambahRole .invalid-feedback").remove();
+
+            let submitButton = $("#formTambahRole button[type='submit']");
+            submitButton.prop("disabled", true).html(`<i class="fa fa-spinner fa-spin"></i> Menyimpan...`);
 
             const formData = $(this).serialize();
 
@@ -254,15 +317,41 @@
                 url: "{{ route('role.store') }}",
                 data: formData,
                 success: function(res) {
-                    $('#exampleModal').modal('hide');
-                    $('#dataTable').DataTable().ajax.reload();
-                    $('#formTambahRole')[0].reset();
+                    submitButton.prop("disabled", false).html(`<i class="fa fa-save"></i> Simpan`);
+
+                    if (res.status === true) {
+                        showAlert(res.message, "success", "Berhasil").then((result) => {
+                            if (result.isConfirmed) {
+                                $("#formTambahRole")[0].reset()
+
+                                $("#formTambahRole .is-invalid").removeClass('is-invalid');
+                                $("#formTambahRole .invalid-feedback").remove();
+
+                                $('#modalTambah').modal('hide');
+                                $('#dataTable').DataTable().ajax.reload(null, false);
+                            }
+                        })
+                    } else {
+                        showAlert(res, "error", "Gagal")
+                    }
                 },
                 error: function(xhr) {
-                    const errors = xhr.responseJSON.errors;
-                    if (errors?.name) {
-                        $('#role_name').addClass('is-invalid');
-                        $('#error-role-name').text(errors.name[0]);
+                    submitButton.prop("disabled", false).html(`<i class="fa fa-save"></i> Simpan`);
+
+                    if (error.status === 422) {
+                        let errors = error.responseJSON.errors;
+
+                        $.each(errors, function(key, value) {
+                            let input = $(`[name="${key}"]`);
+                            input.addClass('is-invalid');
+
+                            input.next('.invalid-feedback').remove();
+
+                            input.after(
+                                `<span class="invalid-feedback d-block">${value[0]}</span>`);
+                        });
+                    } else {
+                        showAlert(error.responseText || error.statusText, "error", "Gagal");
                     }
                 }
             });

@@ -32,7 +32,8 @@
                 <div class="card-body">
 
                     <h4 class="card-title">List User</h4>
-                    <a href="{{ route('users.create') }}" class="btn btn-primary mb-2"><i class="fa fa-plus me-1"></i>Tambah User</a>
+                    <a href="{{ route('users.create') }}" class="btn btn-primary mb-2"><i class="fa fa-plus me-1"></i>Tambah
+                        User</a>
 
                     <table id="dataTable" class="table table-bordered dt-responsive  nowrap w-100">
                         <thead>
@@ -80,7 +81,7 @@
                     type: "GET",
                     dataSrc: function(json) {
                         console.log("DATA DARI SERVER (console.log):", json
-                        .data); // :white_check_mark: tampilkan data di console
+                            .data); // :white_check_mark: tampilkan data di console
                         return json.data; // tetap kembalikan data untuk DataTables
                     },
                 },
@@ -137,26 +138,38 @@
             })
 
             $("#dataTable").on("click", ".btn-delete", function() {
-                const id = $(this).data("id");
-                const confirmed = confirm("Yakin ingin menghapus user ini?");
-                if (!confirmed) return;
+                const id = $(this).data("id")
 
-                $.ajax({
-                    url: `/users/${id}/delete`,
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        alert("User berhasil dihapus!");
-                        $('#dataTable').DataTable().ajax.reload(); // refresh tabel
-                    },
-                    error: function(xhr) {
-                        alert("Gagal menghapus user: " + (xhr.responseJSON?.message ||
-                            'Terjadi kesalahan'));
+                Swal.fire({
+                    title: "Apakah Ingin Menghapus Data Ini?",
+                    text: "Klik Ya Untuk Menghapus Data",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#3085d6",
+                    cancelButtonColor: "#d33",
+                    confirmButtonText: "Ya, Hapus Data",
+                    cancelButtonText: "Kembali",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: `{{ url('/users/${id}/delete') }}`,
+                            method: "DELETE",
+                            success: function(res) {
+                                if (res.status === true) {
+                                    showAlert(res.message, "success", "Berhasil")
+                                    table.ajax.reload()
+                                } else {
+                                    showAlert(res, "error", "Gagal")
+                                }
+                            },
+                            error: function(err) {
+                                console.error(err)
+                                showAlert(err, "error", "Gagal")
+                            }
+                        })
                     }
                 });
-            });
+            })
         });
     </script>
 @endsection
