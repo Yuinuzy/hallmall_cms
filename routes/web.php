@@ -28,14 +28,22 @@ Route::prefix('users')->group(function () {
     Route::delete('/{id}/delete', [UserController::class, 'destroy']);
 });
 
-    Route::prefix('role')->group(function () {
-        Route::get('/', [RoleController::class, 'index'])->name('role.index');
-        Route::post('/role/store', [RoleController::class, 'store'])->name('role.store');
-        Route::get('/json', [RoleController::class, 'json']);
-        Route::get('/{id}/edit', [RoleController::class, 'edit'])->name('role.edit');
-        Route::put('/{id}/update', [RoleController::class, 'update'])->name('role.update');
-        Route::delete('/{id}/delete', [RoleController::class, 'destroy'])->name('role.destroy');
-    });
+Route::prefix('role')->group(function () {
+    Route::get('/', [RoleController::class, 'index'])->name('role.index');
+    Route::post('/role/store', [RoleController::class, 'store'])->name('role.store');
+    Route::get('/json', [RoleController::class, 'json']);
+    Route::get('/{id}/edit', [RoleController::class, 'edit'])->name('role.edit');
+    Route::put('/{id}/update', [RoleController::class, 'update'])->name('role.update');
+    Route::delete('/{id}/delete', [RoleController::class, 'destroy'])->name('role.destroy');
+    Route::get('/{id}/edit-inline', [RoleController::class, 'editInline'])->name('role.edit-inline');
+    Route::get('/{id}/detail', [RoleController::class, 'show'])->name('role.show');
+    Route::post('/{id}/sync-permissions', [RoleController::class, 'syncPermissions'])->name('role.syncPermissions');
+    Route::get('/{id}/permissions/json', [RoleController::class, 'permissionsJson'])->name('role.permissions.json');
+    Route::get('/{id}/assign-permissions', [RoleController::class, 'assignPermissionsPage'])->name('roles.assign.permissions');
+    Route::post('/{id}/assign-permissions', [RoleController::class, 'assignPermissionsSave'])->name('roles.assign.permissions.save');
+    Route::get('/{id}/add-permissions', [RoleController::class, 'addPermissionsPage'])->name('roles.add.permissions');
+    Route::post('/{id}/add-permissions', [RoleController::class, 'addPermissionsSave'])->name('roles.add.permissions.save');
+});
 
 Route::get('/admin/dashboard', function () {
     return 'Ini halaman admin';

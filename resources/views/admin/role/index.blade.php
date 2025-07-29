@@ -78,8 +78,14 @@
                         </thead>
                     </table>
 
+                    <tr id="inline-edit-row" style="display:none;">
+                        <td colspan="4">
+                            <div id="inline-edit-form"></div>
+                        </td>
+                    </tr>
+
                     <!-- Modal Edit -->
-                    <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="exampleModalLabel"
+                    {{-- <div class="modal fade" id="modalEdit" tabindex="-1" aria-labelledby="exampleModalLabel"
                         aria-hidden="true">
                         <div class="modal-dialog">
                             <div class="modal-content">
@@ -108,7 +114,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div> <!-- end col -->
@@ -139,6 +145,9 @@
     <script type="text/javascript">
         $(document).ready(function() {
             let table = $('#dataTable').DataTable({
+                rowId: function(a) {
+                    return 'row-role-' + a.id;
+                },
                 processing: true,
                 serverSide: true,
                 ajax: {
@@ -177,7 +186,10 @@
                         className: 'text-center',
                         render: function(data) {
                             return `
-                            <button class="btn btn-sm btn-warning btn-edit" data-id="${data}">
+                            <button class="btn btn-sm btn-info btn-assign-permission" data-id="${data}">
+                                    <i class="fa fa-plus"></i> Tambah Akses
+                            </button>
+                            <button class="btn btn-sm btn-warning btn-inline-edit" data-id="${data}">
                                 <i class="fa fa-edit"></i> Edit
                             </button>
                             <button class="btn btn-sm btn-danger btn-delete" data-id="${data}">
@@ -189,117 +201,103 @@
                 ]
             });
 
-            $("#dataTable").on("click", ".btn-edit", function() {
-                const id = $(this).data("id");
 
-                $.get(`/role/${id}/edit`, function(role) {
-                    $('#role_id').val(role.id);
-                    $('#role_name_edit').val(role.name);
-                    $('#modalEdit .modal-title').text('Edit Role');
-                    $('#modalEdit').modal('show');
+            $(document).ready(function() {
+                let activeEditId = null; // untuk menyimpan ID row yang sedang diedit
 
-                    $('#formEditRole').off('submit').on('submit', function(e) {
-                        e.preventDefault();
+                $(document).on('click', '.btn-inline-edit', function() {
+                    const id = $(this).data('id');
+                    const targetRow = $('#row-role-' + id);
+                    const existingFormRow = $('#inline-edit-row-' + id);
 
-                        let form = $(this);
-                        let formData = form.serialize() + '&_method=PUT';
+                    // Jika sedang menekan tombol yang sama dan form sudah muncul
+                    if (existingFormRow.length > 0) {
+                        existingFormRow.remove(); // hapus form
+                        activeEditId = null;
+                        return;
+                    }
 
-                        let submitButton = $('#btnSimpan');
-                        submitButton.prop("disabled", true).html(
-                            `<i class="fa fa-spinner fa-spin"></i> Menyimpan...`);
+                    // Jika sebelumnya ada form lain terbuka, tutup dulu
+                    if (activeEditId !== null) {
+                        $('#inline-edit-row-' + activeEditId).remove();
+                    }
 
-                        $.ajax({
-                            url: `/role/${id}/update`,
-                            method: "POST",
-                            data: formData,
-                            success: function(res) {
-                                submitButton.prop("disabled", false).html(
-                                    `<i class="fa fa-save"></i> Simpan`);
+                    // Simpan ID baru yang sedang diedit
+                    activeEditId = id;
 
-                                if (res.status === true) {
-                                    showAlert(res.message, "success",
-                                        "Berhasil").then((result) => {
-                                        if (result.isConfirmed) {
-                                            $("#formEditRole")[0]
-                                                .reset();
-                                            $("#formEditRole .is-invalid")
-                                                .removeClass(
-                                                    'is-invalid');
-                                            $("#formEditRole .invalid-feedback")
-                                                .remove();
-                                            $("#modalEdit").modal(
-                                                "hide");
-                                            $("#dataTable").DataTable()
-                                                .ajax.reload(null,
-                                                    false);
-                                        }
-                                    });
-                                } else {
-                                    showAlert(res.message, "error", "Gagal");
-                                }
-                            },
-                            error: function(error) {
-                                submitButton.prop("disabled", false).html(
-                                    `<i class="fa fa-save"></i> Simpan`);
-                                if (error.status === 422) {
-                                    let errors = error.responseJSON.errors;
-
-                                    $.each(errors, function(key, value) {
-                                        let input = $(
-                                            `#formEditRole [name="${key}"]`
-                                        );
-                                        input.addClass('is-invalid');
-                                        input.next('.invalid-feedback')
-                                            .remove();
-                                        input.after(
-                                            `<span class="invalid-feedback d-block">${value[0]}</span>`
-                                        );
-                                    });
-                                } else {
-                                    showAlert(error.responseText || error
-                                        .statusText, "error", "Gagal");
-                                }
-                            }
-                        });
+                    $.ajax({
+                        url: `/role/${id}/edit-inline`,
+                        method: 'GET',
+                        success: function(res) {
+                            const newRow = `
+                                <tr id="inline-edit-row-${id}" class="inline-edit-row">
+                                    <td colspan="999">${res}</td>
+                                </tr>
+                            `;
+                            targetRow.after(newRow);
+                        }
                     });
                 });
-
             });
 
-            $("#dataTable").on("click", ".btn-delete", function() {
-                const id = $(this).data("id")
 
-                Swal.fire({
-                    title: "Apakah Ingin Menghapus Data Ini?",
-                    text: "Klik Ya Untuk Menghapus Data",
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: "#3085d6",
-                    cancelButtonColor: "#d33",
-                    confirmButtonText: "Ya, Hapus Data",
-                    cancelButtonText: "Kembali",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: `{{ url('/role/${id}/delete') }}`,
-                            method: "DELETE",
-                            success: function(res) {
-                                if (res.status === true) {
-                                    showAlert(res.message, "success", "Berhasil")
-                                    table.ajax.reload()
-                                } else {
-                                    showAlert(res, "error", "Gagal")
-                                }
-                            },
-                            error: function(err) {
-                                console.error(err)
-                                showAlert(err, "error", "Gagal")
-                            }
-                        })
-                    }
-                });
-            })
         });
+
+        $("#dataTable").on("click", ".btn-delete", function() {
+            const id = $(this).data("id")
+
+            Swal.fire({
+                title: "Apakah Ingin Menghapus Data Ini?",
+                text: "Klik Ya Untuk Menghapus Data",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Ya, Hapus Data",
+                cancelButtonText: "Kembali",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: `{{ url('/role/${id}/delete') }}`,
+                        method: "DELETE",
+                        success: function(res) {
+                            if (res.status === true) {
+                                showAlert(res.message, "success", "Berhasil")
+                                table.ajax.reload()
+                            } else {
+                                showAlert(res, "error", "Gagal")
+                            }
+                        },
+                        error: function(err) {
+                            console.error(err)
+                            showAlert(err, "error", "Gagal")
+                        }
+                    })
+                }
+            });
+        })
+
+        $(document).on('click', '.btn-assign-permission', function() {
+            const id = $(this).data('id');
+            window.location.href = `/role/${id}/assign-permissions`;
+
+            $.ajax({
+                // url: `/role/${id}/detail`,
+                method: 'GET',
+                success: function(res) {
+                    // Misal tampilkan di bawah tabel:
+                    $('#role-detail-container').html(res).slideDown();
+
+                    // Atau kalau mau tampilkan dalam modal:
+                    // $('#role-detail-modal-content').html(res);
+                    // $('#roleDetailModal').modal('show');
+                },
+                error: function() {
+                    showAlert('Gagal memuat detail role.', 'error', 'Gagal');
+                }
+            });
+        });
+
 
         $('#formTambahRole').on('submit', function(e) {
             e.preventDefault();
