@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\ResponseHelper;
-use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Permission\Models\Permission;
 use Yajra\DataTables\DataTables;
 
 class PermissionController extends Controller

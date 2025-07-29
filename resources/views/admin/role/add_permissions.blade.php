@@ -21,18 +21,23 @@
                     <form action="{{ route('roles.add.permissions.save', $role->id) }}" method="POST">
                         @csrf
                         @foreach ($permissions as $permission)
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="permissions[]"
-                                    value="{{ $permission->id }}" id="perm_{{ $permission->id }}"
-                                    {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}>
+        <div class="mb-2 form-check">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="permissions[]"
+                value="{{ $permission->name }}"
+                id="perm_{{ $permission->id }}"
+                {{ $role->hasPermissionTo($permission->name) ? 'checked' : '' }}
+            >
 
-                                <label class="form-check-label" for="perm_{{ $permission->id }}">
-                                    {{ $permission->name }}
-                                </label>
-                            </div>
-                        @endforeach
+            <label class="form-check-label" for="perm_{{ $permission->id }}">
+                {{ $permission->name }}
+            </label>
+        </div>
+    @endforeach
 
-                        <button type="submit" class="btn btn-primary mt-3">Simpan</button>
+                        <button type="submit" class="mt-3 btn btn-primary">Simpan</button>
                     </form>
 
                 </div>

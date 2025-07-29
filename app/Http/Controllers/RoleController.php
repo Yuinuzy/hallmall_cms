@@ -176,7 +176,7 @@ class RoleController extends Controller
     public function addPermissionsPage($id)
     {
 
-        $role = Role::findOrFail($id);
+        $role = Role::with("permissions")->findOrFail($id);
 
         // dd($role->hasPermission);
         $permissions = Permission::all();
