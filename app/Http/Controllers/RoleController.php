@@ -131,21 +131,22 @@ class RoleController extends Controller
         return view('admin.role.show', compact('role', 'permissions', 'jumlahUser'));
     }
 
+
     public function permissionsJson($id)
     {
         $role = Role::findOrFail($id);
-        $permissions = $role->permissions()->get(); // hanya ambil permission yang sudah dimiliki role
+        $permissions = $role->permissions()->withCount('roles')->get();
 
-        return DataTables::of($permissions)
-            ->addIndexColumn()
-            ->addColumn('jumlah_role', function ($permission) {
-                return $permission->roles()->count();
-            })
-            ->addColumn('aksi', function ($permission) {
-                return '<button class="btn btn-sm btn-primary">Edit</button>';
-            })
-            ->rawColumns(['aksi'])
-            ->make(true);
+        $data = $permissions->map(function ($permission, $index) {
+            return [
+                'DT_RowIndex' => $index + 1,
+                'id' => $permission->id,
+                'name' => $permission->name,
+            ];
+        });
+
+
+        return response()->json(['data' => $data]);
     }
 
 
@@ -214,5 +215,17 @@ class RoleController extends Controller
         $role->syncPermissions($permissionNames);
 
         return redirect()->route('roles.assign.permissions', ['id' => $id])->with('success', 'Permission berhasil ditambahkan');
+    }
+
+    public function revokePermission(Request $request, $id)
+    {
+        $request->validate([
+            'permission_name' => 'required|string|exists:permissions,name',
+        ]);
+
+        $role = Role::findOrFail($id);
+        $role->revokePermissionTo($request->permission_name);
+
+        return response()->json(['success' => true, 'message' => 'Permission berhasil dicabut dari role.']);
     }
 }

@@ -200,5 +200,8 @@ return [
   "settings" => "Pengaturan",
   "user" => "User",
   "role" => "Peran",
-  "permission" => "Permission"
+  "permission" => "Permission",
+  "man_category" => "Manajemen Kategori",
+  "category" => "Kategori",
+  "sub_category" => "Sub Kategori"
 ];

@@ -16,17 +16,6 @@
                     </a>
                 </li>
 
-                 <li>
-                    <a href="javascript: void(0);" class="has-arrow waves-effect">
-                        <i class="bx bx-store-alt"></i>
-                        <span>@lang('translation.seller')</span>
-                    </a>
-                    <ul class="sub-menu" aria-expanded="true">
-                        <li><a href="javascript: void(0);">@lang('translation.seller_req')</a></li>
-                        <li><a href="javascript: void(0);">@lang('translation.seller_list')</a></li>
-                    </ul>
-                </li>
-
                 <li>
                      <a href="{{ route('users.index') }}" class="waves-effect">
                         <i class='bx bx-user-circle'  ></i>
@@ -34,12 +23,12 @@
                     </a>
                 </li>
 
-                <li>
-                     <a href="{{ url('/permission') }}" class="waves-effect">
-                        <i class='bx bx-user-circle'  ></i>
-                        <span >@lang('translation.Permission')</span>
+                {{-- <li>
+                     <a href="{{ route('merchant_kategori.index') }}" class="waves-effect">
+                        <i class='bx bx-tag'></i>
+                        <span >@lang('translation.category')</span>
                     </a>
-                </li>
+                </li> --}}
 
 
                  <li>
@@ -52,7 +41,18 @@
                             <li><a href="javascript: void(0);">@lang('translation.user')</a></li>
                         @endcan
                         <li><a href="{{ route('role.index') }}">@lang('translation.role')</a></li>
-                        <li><a href="javascript: void(0);">@lang('translation.permission')</a></li>
+                        <li><a href="{{ url('/permission') }}">@lang('translation.permission')</a></li>
+                    </ul>
+                </li>
+
+                <li>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect">
+                        <i class="bx bx-tag"></i>
+                        <span>@lang('translation.man_category')</span>
+                    </a>
+                    <ul class="sub-menu" aria-expanded="true">
+                        <li><a href="{{ route('merchant_kategori.index') }}">@lang('translation.category')</a></li>
+                        <li><a href="{{ route('sub_kategori.index') }}">@lang('translation.sub_category')</a></li>
                     </ul>
                 </li>
 

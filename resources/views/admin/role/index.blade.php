@@ -187,10 +187,7 @@
                         render: function(data) {
                             return `
                             <button class="btn btn-sm btn-info btn-assign-permission" data-id="${data}">
-                                    <i class="fa fa-plus"></i> Tambah Akses
-                            </button>
-                            <button class="btn btn-sm btn-warning btn-inline-edit" data-id="${data}">
-                                <i class="fa fa-edit"></i> Edit
+                                    <i class="fa fa-cogs"></i> Kelola Akses
                             </button>
                             <button class="btn btn-sm btn-danger btn-delete" data-id="${data}">
                                 <i class="fa fa-trash"></i> Hapus
@@ -200,47 +197,6 @@
                     }
                 ]
             });
-
-
-            $(document).ready(function() {
-                let activeEditId = null; // untuk menyimpan ID row yang sedang diedit
-
-                $(document).on('click', '.btn-inline-edit', function() {
-                    const id = $(this).data('id');
-                    const targetRow = $('#row-role-' + id);
-                    const existingFormRow = $('#inline-edit-row-' + id);
-
-                    // Jika sedang menekan tombol yang sama dan form sudah muncul
-                    if (existingFormRow.length > 0) {
-                        existingFormRow.remove(); // hapus form
-                        activeEditId = null;
-                        return;
-                    }
-
-                    // Jika sebelumnya ada form lain terbuka, tutup dulu
-                    if (activeEditId !== null) {
-                        $('#inline-edit-row-' + activeEditId).remove();
-                    }
-
-                    // Simpan ID baru yang sedang diedit
-                    activeEditId = id;
-
-                    $.ajax({
-                        url: `/role/${id}/edit-inline`,
-                        method: 'GET',
-                        success: function(res) {
-                            const newRow = `
-                                <tr id="inline-edit-row-${id}" class="inline-edit-row">
-                                    <td colspan="999">${res}</td>
-                                </tr>
-                            `;
-                            targetRow.after(newRow);
-                        }
-                    });
-                });
-            });
-
-
         });
 
         $("#dataTable").on("click", ".btn-delete", function() {

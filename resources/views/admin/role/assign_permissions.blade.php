@@ -39,11 +39,11 @@
                                 <tr>
                                     <th>No</th>
                                     <th>Nama Permission</th>
-                                    <th>Jumlah Role yang Menggunakan</th>
-                                    <th>Akses</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                         </table>
+                        <a href="{{ route('role.index') }}" class="btn btn-danger">Kembali</a>
 
                     </form>
                 </div>
@@ -79,17 +79,43 @@
                         name: 'name'
                     },
                     {
-                        data: 'jumlah_role',
-                        name: 'jumlah_role'
-                    },
-                    {
-                        data: 'aksi',
+                        data: null,
                         name: 'aksi',
                         orderable: false,
-                        searchable: false
+                        searchable: false,
+                        render: function(data, type, row) {
+                            return `
+                                <button type="button" class="btn btn-sm btn-danger btn-remove-permission"
+                                    data-permission="${row.name}">
+                                <i class="fa fa-trash"></i> Hapus </button>
+                            `;
+                        }
                     }
                 ]
             });
+            $('#permissionsTable').on('click', '.btn-remove-permission', function() {
+                const permissionName = $(this).data('permission');
+
+                if (confirm(`Yakin ingin menghapus akses "${permissionName}" dari role ini?`)) {
+                    $.ajax({
+                        url: `/role/${roleId}/revoke-permission`,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            permission_name: permissionName
+                        },
+                        success: function(res) {
+                            alert(res.message);
+                            $('#permissionsTable').DataTable().ajax.reload();
+                        },
+                        error: function(err) {
+                            alert('Gagal mencabut permission.');
+                            console.error(err);
+                        }
+                    });
+                }
+            });
+
         });
     </script>
 @endsection
